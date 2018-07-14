@@ -629,9 +629,7 @@ static u32 __seccomp_phase1_filter(int this_syscall, struct seccomp_data *sd)
 
 	switch (action) {
 	case SECCOMP_RET_ERRNO:
-		/* Set low-order bits as an errno, capped at MAX_ERRNO. */
-		if (data > MAX_ERRNO)
-			data = MAX_ERRNO;
+		/* Set the low-order 16-bits as a errno. */
 		syscall_set_return_value(current, task_pt_regs(current),
 					 -data, 0);
 		goto skip;
