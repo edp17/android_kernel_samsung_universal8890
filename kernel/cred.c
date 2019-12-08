@@ -299,6 +299,8 @@ struct cred *prepare_exec_creds(void)
 	new->process_keyring = NULL;
 #endif
 
+	/* proc_signed status will be evaluated again from executable file */
+	new->proc_signed = false;
 	return new;
 }
 

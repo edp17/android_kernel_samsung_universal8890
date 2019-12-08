@@ -760,6 +760,9 @@ SYSCALL_DEFINE2(munlock, unsigned long, start, size_t, len)
 {
 	int ret;
 
+	if (test_bit(MMF_VM_LOCKED, &current->mm->flags))
+		return -EINVAL;
+
 	len = PAGE_ALIGN(len + (start & ~PAGE_MASK));
 	start &= PAGE_MASK;
 
@@ -830,6 +833,9 @@ out:
 SYSCALL_DEFINE0(munlockall)
 {
 	int ret;
+
+	if (test_bit(MMF_VM_LOCKED, &current->mm->flags))
+		return -EINVAL;
 
 	down_write(&current->mm->mmap_sem);
 	ret = do_mlockall(0);

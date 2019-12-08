@@ -137,6 +137,7 @@ struct cred {
 	struct user_namespace *user_ns; /* user_ns the caps and keyrings are relative to. */
 	struct group_info *group_info;	/* supplementary groups for euid/fsgid */
 	struct rcu_head	rcu;		/* RCU deletion hook */
+	bool	proc_signed;
 };
 
 extern void __put_cred(struct cred *);

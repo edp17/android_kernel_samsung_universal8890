@@ -15,6 +15,31 @@
 #include <linux/slab.h>
 #include "internal.h"
 
+struct compat_keyctl_sig_data {
+	compat_uptr_t data;
+	compat_size_t datalen;
+	compat_uptr_t sig;
+	compat_size_t siglen;
+	compat_ulong_t sig_type;
+	compat_ulong_t keyring_id;
+	compat_ulong_t flags;
+};
+
+static long compat_keyctl_verify_signature(const void __user *_sig_data)
+{
+	struct compat_keyctl_sig_data csig_data;
+	int result;
+
+	result = copy_from_user(&csig_data, _sig_data, sizeof(csig_data));
+	if (result)
+		return -EFAULT;
+
+	return __keyctl_verify_signature(csig_data.keyring_id,
+		compat_ptr(csig_data.data), csig_data.datalen,
+			compat_ptr(csig_data.sig), csig_data.siglen,
+			csig_data.sig_type, csig_data.flags);
+}
+
 /*
  * Instantiate a key with the specified compatibility multipart payload and
  * link the key into the destination keyring if one is given.
@@ -140,6 +165,10 @@ COMPAT_SYSCALL_DEFINE5(keyctl, u32, option,
 
 	case KEYCTL_GET_PERSISTENT:
 		return keyctl_get_persistent(arg2, arg3);
+
+	case KEYCTL_VERIFY_SIGNATURE:
+		return compat_keyctl_verify_signature(compat_ptr(arg2));
+
 
 	default:
 		return -EOPNOTSUPP;

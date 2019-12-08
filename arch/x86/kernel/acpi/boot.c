@@ -44,6 +44,8 @@
 #include <asm/io.h>
 #include <asm/mpspec.h>
 #include <asm/smp.h>
+#include <asm/bootparam.h>
+#include <asm/setup.h>
 #include <asm/i8259.h>
 
 #include "sleep.h" /* To include x86_acpi_suspend_lowlevel */
@@ -1432,6 +1434,7 @@ static struct dmi_system_id __initdata acpi_dmi_table_late[] = {
 
 void __init acpi_boot_table_init(void)
 {
+	acpi_rsdp_bootparam = boot_params.acpi_rsdp_addr;
 	dmi_check_system(acpi_dmi_table);
 
 	/*

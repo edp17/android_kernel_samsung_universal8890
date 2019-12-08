@@ -155,6 +155,8 @@ extern u32 acpi_irq_not_handled;
 extern int sbf_port;
 extern unsigned long acpi_realmode_flags;
 
+extern unsigned long long acpi_rsdp_bootparam;
+
 int acpi_register_gsi (struct device *dev, u32 gsi, int triggering, int polarity);
 int acpi_gsi_to_irq (u32 gsi, unsigned int *irq);
 int acpi_isa_irq_to_gsi (unsigned isa_irq, u32 *gsi);

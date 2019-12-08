@@ -22,6 +22,20 @@
 
 MODULE_LICENSE("GPL");
 
+const char *const pkey_hash_algo_name[PKEY_HASH__LAST] = {
+	[PKEY_HASH_MD4]		= "md4",
+	[PKEY_HASH_MD5]		= "md5",
+	[PKEY_HASH_SHA1]	= "sha1",
+	[PKEY_HASH_RIPE_MD_160]	= "rmd160",
+	[PKEY_HASH_SHA256]	= "sha256",
+	[PKEY_HASH_SHA384]	= "sha384",
+	[PKEY_HASH_SHA512]	= "sha512",
+	[PKEY_HASH_SHA224]	= "sha224",
+};
+EXPORT_SYMBOL_GPL(pkey_hash_algo_name);
+
+
+
 const char *const pkey_algo_name[PKEY_ALGO__LAST] = {
 	[PKEY_ALGO_DSA]		= "DSA",
 	[PKEY_ALGO_RSA]		= "RSA",

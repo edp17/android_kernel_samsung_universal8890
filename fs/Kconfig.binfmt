@@ -23,6 +23,17 @@ config BINFMT_ELF
 	  ld.so (check the file <file:Documentation/Changes> for location and
 	  latest version).
 
+config BINFMT_ELF_SIG
+	bool "ELF binary signature verification"
+	depends on BINFMT_ELF
+	depends on INTEGRITY_ASYMMETRIC_KEYS
+	depends on IMA_APPRAISE
+	depends on SYSTEM_TRUSTED_KEYRING
+	default n
+	---help---
+	  Check ELF binary signature verfication.
+
+
 config COMPAT_BINFMT_ELF
 	bool
 	depends on COMPAT && BINFMT_ELF

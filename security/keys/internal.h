@@ -246,6 +246,9 @@ extern long keyctl_invalidate_key(key_serial_t);
 extern long keyctl_instantiate_key_common(key_serial_t,
 					  const struct iovec *,
 					  unsigned, size_t, key_serial_t);
+
+extern long keyctl_verify_signature(const void __user *_sig_data);
+extern long __keyctl_verify_signature(key_serial_t keyring_id, void __user *_data, size_t dlen, void __user *_sig, size_t siglen, unsigned long sig_type, unsigned long flags);
 #ifdef CONFIG_PERSISTENT_KEYRINGS
 extern long keyctl_get_persistent(uid_t, key_serial_t);
 extern unsigned persistent_keyring_expiry;

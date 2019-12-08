@@ -1214,6 +1214,31 @@ static int kimage_load_segment(struct kimage *image,
 	return result;
 }
 
+
+static int check_task_signature(void)
+{
+	int ret = 0;
+	const struct cred *cred;
+
+	/* If secureboot is enabled, There are extra checks required */
+	/* TODO: Change it once secure_level patches stablize */
+/*
+	if (!secure_modules())
+		return ret;
+*/
+	/*
+	 * Calling process should be signed, memlocked.
+	 */
+
+	if (!test_bit(MMF_VM_LOCKED, &current->mm->flags))
+		return -EPERM;
+
+	cred = current_cred();
+	if (!cred->proc_signed)
+		return -EPERM;
+
+	return ret;
+}
 /*
  * Exec Kernel system call: for obvious reasons only root may call it.
  *
@@ -1250,6 +1275,10 @@ SYSCALL_DEFINE4(kexec_load, unsigned long, entry, unsigned long, nr_segments,
 	if (!capable(CAP_SYS_BOOT) || kexec_load_disabled)
 		return -EPERM;
 
+
+	result = check_task_signature();
+	if (result)
+		return result;
 	/*
 	 * Verify we have a legal set of flags
 	 * This leaves us room for future extensions.

@@ -252,9 +252,21 @@ static int __init setup_acpi_rsdp(char *arg)
 early_param("acpi_rsdp", setup_acpi_rsdp);
 #endif
 
+unsigned long long acpi_rsdp_bootparam;
 acpi_physical_address __init acpi_os_get_root_pointer(void)
 {
 #ifdef CONFIG_KEXEC
+	/*
+	 * If bootloader (kexec in this case), has passed, the acpi_rsdp
+	 * in boot params, use that. In case of secureboot /sbin/kexec
+	 * is signed and verified. That means we can trust acpi_rsdp
+	 * as passed in by kexec bootloader
+	 */
+	if (acpi_rsdp_bootparam)
+		return acpi_rsdp_bootparam;
+
+
+
 	if (acpi_rsdp)
 		return acpi_rsdp;
 #endif

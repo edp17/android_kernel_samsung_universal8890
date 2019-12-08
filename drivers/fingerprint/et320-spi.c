@@ -41,6 +41,8 @@
 #endif
 #include <linux/sysfs.h>
 
+extern bool fp_lockscreen_mode;
+
 static DECLARE_BITMAP(minors, N_SPI_MINORS);
 
 static LIST_HEAD(device_list);

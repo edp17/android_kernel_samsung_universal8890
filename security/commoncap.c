@@ -157,6 +157,15 @@ int cap_ptrace_access_check(struct task_struct *child, unsigned int mode)
 	rcu_read_lock();
 	cred = current_cred();
 	child_cred = __task_cred(child);
+
+
+
+	if (mode != PTRACE_MODE_READ && child_cred->proc_signed &&
+	    !cred->proc_signed) {
+		ret = -EPERM;
+		goto out;
+	}
+
 	if (cred->user_ns == child_cred->user_ns &&
 	    cap_issubset(child_cred->cap_permitted, cred->cap_permitted))
 		goto out;
@@ -189,6 +198,15 @@ int cap_ptrace_traceme(struct task_struct *parent)
 	rcu_read_lock();
 	cred = __task_cred(parent);
 	child_cred = current_cred();
+
+
+
+	if (child_cred->proc_signed && !cred->proc_signed) {
+		ret = -EPERM;
+		goto out;
+	}
+
+
 	if (cred->user_ns == child_cred->user_ns &&
 	    cap_issubset(child_cred->cap_permitted, cred->cap_permitted))
 		goto out;

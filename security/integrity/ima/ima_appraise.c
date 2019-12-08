@@ -15,6 +15,8 @@
 #include <linux/magic.h>
 #include <linux/ima.h>
 #include <linux/evm.h>
+#include <crypto/public_key.h>
+#include <crypto/hash.h>
 #include <crypto/hash_info.h>
 
 #include "ima.h"
@@ -128,6 +130,129 @@ static void ima_cache_flags(struct integrity_iint_cache *iint, int func)
 		iint->flags |= (IMA_FILE_APPRAISED | IMA_APPRAISED);
 		break;
 	}
+}
+
+static int ima_get_file_hash(struct file *file, char **_digest,
+				unsigned int *digest_len,
+				enum pkey_hash_algo hash_algo)
+{
+	loff_t i_size, offset = 0;
+	char *rbuf;
+	int ret, read = 0;
+	struct crypto_shash *tfm;
+	size_t desc_size, digest_size;
+	struct shash_desc *desc;
+	char *digest = NULL;
+
+	rbuf = kzalloc(PAGE_SIZE, GFP_KERNEL);
+	if (!rbuf)
+		return -ENOMEM;
+
+	tfm = crypto_alloc_shash(pkey_hash_algo_name[hash_algo], 0, 0);
+	if (IS_ERR(tfm)) {
+		ret = PTR_ERR(tfm);
+		goto out;
+	}
+
+	desc_size = crypto_shash_descsize(tfm) + sizeof(*desc);
+	desc = kzalloc(desc_size, GFP_KERNEL);
+	if (!desc) {
+		ret = -ENOMEM;
+		goto out_free_tfm;
+	}
+
+	desc->tfm   = tfm;
+	desc->flags = 0;
+
+	ret = crypto_shash_init(desc);
+	if (ret < 0)
+		goto out_free_desc;
+
+	digest_size = crypto_shash_digestsize(tfm);
+	digest = kzalloc(digest_size, GFP_KERNEL);
+	if (!digest) {
+		ret = -ENOMEM;
+		goto out_free_desc;
+	}
+
+	if (!(file->f_mode & FMODE_READ)) {
+		file->f_mode |= FMODE_READ;
+		read = 1;
+	}
+	i_size = i_size_read(file_inode(file));
+	while (offset < i_size) {
+		int rbuf_len;
+
+		rbuf_len = kernel_read(file, offset, rbuf, PAGE_SIZE);
+		if (rbuf_len < 0) {
+			ret = rbuf_len;
+			break;
+		}
+		if (rbuf_len == 0)
+			break;
+		offset += rbuf_len;
+
+		ret = crypto_shash_update(desc, rbuf, rbuf_len);
+		if (ret)
+			break;
+	}
+
+	if (!ret) {
+		ret = crypto_shash_final(desc, digest);
+		*_digest = digest;
+		*digest_len = digest_size;
+		digest = NULL;
+	}
+
+	if (read)
+		file->f_mode &= ~FMODE_READ;
+
+out_free_desc:
+	kfree(desc);
+out_free_tfm:
+	kfree(tfm);
+out:
+	if (digest)
+		kfree(digest);
+	kfree(rbuf);
+	return ret;
+}
+
+/*
+ * Appraise a file with a given digital signature
+ * keyring: keyring to use for appraisal
+ * sig: signature
+ * siglen: length of signature
+ *
+ * Returns 0 on successful appraisal, error otherwise.
+ */
+int ima_appraise_file_digsig(struct key *keyring, struct file *file, char *sig,
+				unsigned int siglen)
+{
+	struct evm_ima_xattr_data *xattr_value;
+	int ret = 0;
+	char *digest = NULL;
+	enum pkey_hash_algo hash_algo;
+	unsigned int digest_len = 0;
+
+	xattr_value = (struct evm_ima_xattr_data*) sig;
+
+	if (xattr_value->type != EVM_IMA_XATTR_DIGSIG)
+		return -EBADMSG;
+	ret = integrity_digsig_get_hash_algo(xattr_value->digest);
+	if (ret < 0)
+		return ret;
+
+	hash_algo = (enum pkey_hash_algo)ret;
+	ret = ima_get_file_hash(file, &digest, &digest_len, hash_algo);
+	if (ret)
+		return ret;
+
+	ret = integrity_digsig_verify_keyring(keyring, xattr_value->digest,
+				integrity_get_digsig_size(xattr_value->digest),
+				digest, digest_len);
+	kfree(digest);
+	return ret;
 }
 
 void ima_get_hash_algo(struct evm_ima_xattr_data *xattr_value, int xattr_len,
@@ -249,9 +374,9 @@ int ima_appraise_measurement(int func, struct integrity_iint_cache *iint,
 	case EVM_IMA_XATTR_DIGSIG:
 		iint->flags |= IMA_DIGSIG;
 		rc = integrity_digsig_verify(INTEGRITY_KEYRING_IMA,
-					     (const char *)xattr_value, rc,
-					     iint->ima_hash->digest,
-					     iint->ima_hash->length);
+				xattr_value->digest,
+				integrity_get_digsig_size(xattr_value->digest),
+				iint->ima_xattr.digest, IMA_DIGEST_SIZE);
 		if (rc == -EOPNOTSUPP) {
 			status = INTEGRITY_UNKNOWN;
 		} else if (rc) {

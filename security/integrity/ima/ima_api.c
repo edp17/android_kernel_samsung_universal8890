@@ -336,3 +336,56 @@ const char *ima_d_path(struct path *path, char **pathbuf)
 	}
 	return pathname ?: (const char *)path->dentry->d_name.name;
 }
+
+
+/* Given the signature check whether file should be memlocked or not */
+bool ima_memlock_file(char *sig, unsigned int siglen)
+{
+	struct evm_ima_xattr_data *ima_xattr = (struct evm_ima_xattr_data *)sig;
+	char *sptr;
+	unsigned int dsiglen;
+	uint8_t version;
+
+	dsiglen = integrity_get_digsig_size((char *)ima_xattr->digest);
+
+	if (siglen <= dsiglen)
+		return false;
+
+	/*
+	 * Make sure atleast 9 more bytes are there to scan for magic string
+	 * and version info
+	 */
+	if (siglen <= dsiglen + 9)
+		return false;
+
+	sptr = (char *)ima_xattr->digest + dsiglen;
+
+	if (strncmp(sptr, "MEMLOCK", 7))
+		return false;
+
+	sptr += 8;
+	version = sptr[0];
+	if (version != 1)
+		return false;
+	sptr++;
+	if (sptr[0] != 1)
+		return false;
+
+	return true;
+}
+
+
+/*
+ * Get ima signature.
+ */
+int ima_file_signature_alloc(struct file *file, char **sig)
+{
+	struct dentry *dentry = file->f_dentry;
+
+	return vfs_getxattr_alloc(dentry, XATTR_NAME_IMA, sig, 0, GFP_NOFS);
+}
+
+int ima_signature_type(char *sig)
+{
+	return ((struct evm_ima_xattr_data *)sig)->type;
+}

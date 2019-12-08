@@ -82,6 +82,7 @@ SECTIONS
 #endif
 		*(.discard)
 		*(.discard.*)
+		*(.ARM.exidx.discard)
 	}
 
 #ifdef CONFIG_XIP_KERNEL

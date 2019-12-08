@@ -15,6 +15,7 @@
 #include <linux/integrity.h>
 #include <crypto/sha.h>
 #include <linux/key.h>
+#include <crypto/public_key.h>
 
 /* iint action cache flags */
 #define IMA_MEASURE		0x00000001
@@ -56,14 +57,6 @@
 				 IMA_BPRM_APPRAISED | IMA_MODULE_APPRAISED | \
 				 IMA_FIRMWARE_APPRAISED)
 
-enum evm_ima_xattr_type {
-	IMA_XATTR_DIGEST = 0x01,
-	EVM_XATTR_HMAC,
-	EVM_IMA_XATTR_DIGSIG,
-	IMA_XATTR_DIGEST_NG,
-	IMA_XATTR_LAST
-};
-
 struct evm_ima_xattr_data {
 	u8 type;
 	u8 digest[SHA1_DIGEST_SIZE];
@@ -88,17 +81,18 @@ struct ima_digest_data {
 	u8 digest[0];
 } __packed;
 
-/*
- * signature format v2 - for using with asymmetric keys
- */
 struct signature_v2_hdr {
-	uint8_t type;		/* xattr type */
 	uint8_t version;	/* signature format version */
 	uint8_t	hash_algo;	/* Digest algorithm [enum pkey_hash_algo] */
-	uint32_t keyid;		/* IMA key identifier - not X509/PGP specific */
+	uint32_t keyid;		/* IMA key identifier - not X509/PGP specific*/
 	uint16_t sig_size;	/* signature size */
 	uint8_t sig[0];		/* signature payload */
 } __packed;
+
+/*
+ * signature format v2 - for using with asymmetric keys
+ */
+
 
 /* integrity data associated with an inode */
 struct integrity_iint_cache {
@@ -106,6 +100,7 @@ struct integrity_iint_cache {
 	struct inode *inode;	/* back pointer to inode in question */
 	u64 version;		/* track inode changes */
 	unsigned long flags;
+	struct evm_ima_xattr_data ima_xattr;
 	enum integrity_status ima_file_status:4;
 	enum integrity_status ima_mmap_status:4;
 	enum integrity_status ima_bprm_status:4;
@@ -130,8 +125,19 @@ struct integrity_iint_cache *integrity_iint_find(struct inode *inode);
 int integrity_digsig_verify(const unsigned int id, const char *sig, int siglen,
 			    const char *digest, int digestlen);
 
+int integrity_digsig_verify_keyring(struct key *keyring, const char *sig,
+			int siglen, const char *digest, int digestlen);
+
+extern int integrity_get_digsig_size(char *sig);
+extern int integrity_digsig_get_hash_algo(char *sig);
 int integrity_init_keyring(const unsigned int id);
 #else
+
+
+static inline int integrity_digsig_get_hash_algo(char *sig)
+{
+	return -EOPNOTSUPP;
+}
 
 static inline int integrity_digsig_verify(const unsigned int id,
 					  const char *sig, int siglen,
@@ -140,10 +146,18 @@ static inline int integrity_digsig_verify(const unsigned int id,
 	return -EOPNOTSUPP;
 }
 
+static inline int integrity_digsig_verify_keyring(struct key *keyring,
+			const char *sig, int siglen, const char *digest,
+			int digestlen)
+{
+	return -EOPNOTSUPP;
+}
+
 static inline int integrity_init_keyring(const unsigned int id)
 {
 	return 0;
 }
+static inline int integrity_get_digsig_size(char *sig) { return -EOPNOTSUPP; }
 #endif /* CONFIG_INTEGRITY_SIGNATURE */
 
 #ifdef CONFIG_INTEGRITY_ASYMMETRIC_KEYS

@@ -34,6 +34,8 @@
 #include <linux/utsname.h>
 #include <linux/coredump.h>
 #include <linux/sched.h>
+#include <linux/ima.h>
+#include <keys/system_keyring.h>
 #include <asm/uaccess.h>
 #include <asm/param.h>
 #include <asm/page.h>
@@ -569,6 +571,43 @@ static unsigned long randomize_stack_top(unsigned long stack_top)
 #endif
 }
 
+
+#ifdef CONFIG_BINFMT_ELF_SIG
+/* check if current is being ptraced by tracer which is unsigned */
+static bool ptraced_by_unsafe_tracer(void)
+{
+	struct task_struct *child = current, *parent;
+	bool ret = false;
+	const struct cred *tcred;
+
+	/* Make sure parent does not change due to tracer ptrace detach */
+	read_lock(&tasklist_lock);
+
+	if (!child->ptrace) {
+		ret = false;
+		goto out;
+	}
+
+	parent = child->parent;
+	rcu_read_lock();
+	tcred = __task_cred(parent);
+	if (!tcred->proc_signed)
+		ret = true;
+	rcu_read_unlock();
+
+	/*
+	 * Make sure parent is memlocked too otherwise it might be signed
+	 * but still being swapped out and is open to address space
+	 * modifications.
+	 */
+	if (!test_bit(MMF_VM_LOCKED, &parent->mm->flags))
+		ret = true;
+
+out:
+	read_unlock(&tasklist_lock);
+	return ret;
+}
+#endif
 static int load_elf_binary(struct linux_binprm *bprm)
 {
 	struct file *interpreter = NULL; /* to shut gcc up */
@@ -586,6 +625,12 @@ static int load_elf_binary(struct linux_binprm *bprm)
 	unsigned long reloc_func_desc __maybe_unused = 0;
 	int executable_stack = EXSTACK_DEFAULT;
 	struct pt_regs *regs = current_pt_regs();
+
+	char *signature = NULL;
+#ifdef CONFIG_BINFMT_ELF_SIG
+	unsigned int siglen = 0;
+	bool mlock_mappings = false;
+#endif
 	struct {
 		struct elfhdr elf_ex;
 		struct elfhdr interp_elf_ex;
@@ -723,6 +768,46 @@ static int load_elf_binary(struct linux_binprm *bprm)
 	retval = flush_old_exec(bprm);
 	if (retval)
 		goto out_free_dentry;
+
+#ifdef CONFIG_BINFMT_ELF_SIG
+	/*
+	 * If executable is digitally signed and ima memlock info present,
+	 * Lock down in memory
+	 */
+	retval = ima_file_signature_alloc(bprm->file, &signature);
+
+	/*
+	 * If there is an error getting signature, bail out. Having
+	 * no signature is fine though.
+	 */
+	if (retval < 0 && retval != -ENODATA && retval != -EOPNOTSUPP)
+		goto out_free_dentry;
+
+	if (signature != NULL) {
+		siglen = retval;
+		retval = ima_signature_type(signature);
+		if (retval == EVM_IMA_XATTR_DIGSIG &&
+		    ima_memlock_file(signature, siglen)) {
+			/*
+			 * Verify signature before locking down file. We don't
+			 * want to memlock executables with fake signatures
+			 */
+			retval = ima_appraise_file_digsig(
+					system_trusted_keyring,
+					bprm->file, signature, siglen);
+			if (retval) {
+				send_sig(SIGKILL, current, 0);
+				goto out_free_dentry;
+			}
+
+			mlock_mappings = true;
+			current->mm->def_flags |= VM_LOCKED;
+			set_bit(MMF_VM_LOCKED, &current->mm->flags);
+		}
+	}
+#endif
+
+
 
 	/* Do this immediately, since STACK_TOP as used in setup_arg_pages
 	   may depend on the personality.  */
@@ -892,6 +977,31 @@ static int load_elf_binary(struct linux_binprm *bprm)
 		goto out_free_dentry;
 	}
 
+#ifdef CONFIG_BINFMT_ELF_SIG
+	if (mlock_mappings) {
+		/*
+		 * File locked down in memory. Now it is safe against any
+		 * modifications on disk by raw disk writes. Verify signature.
+		 */
+		retval = ima_appraise_file_digsig(system_trusted_keyring,
+					bprm->file, signature, siglen);
+		if (retval) {
+			send_sig(SIGKILL, current, 0);
+			goto out_free_dentry;
+		}
+
+		/*
+		 * Signature verification successful. If this process is
+		 * is being ptraced at the time of exec() and tracer is
+		 * not signed, do not set proc_signed, otherwise unsigned
+		 * tracer could change signed tracee's address space,
+		 * effectively nullifying singature checking.
+		 */
+if (!ptraced_by_unsafe_tracer() && !elf_interpreter)
+			bprm->cred->proc_signed = true;
+	}
+#endif
+
 	if (elf_interpreter) {
 		unsigned long interp_map_addr = 0;
 
@@ -984,6 +1094,7 @@ static int load_elf_binary(struct linux_binprm *bprm)
 	retval = 0;
 out:
 	kfree(loc);
+kfree(signature);
 out_ret:
 	return retval;
 

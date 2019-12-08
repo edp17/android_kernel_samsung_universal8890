@@ -18,6 +18,8 @@
 #include <linux/stat.h>
 #include <linux/sched.h>
 #include <linux/capability.h>
+#include <linux/efi.h>
+#include <linux/module.h>
 #include <linux/compiler.h>
 
 #include <linux/rcupdate.h>	/* rcu_expedited */
@@ -104,6 +106,26 @@ static ssize_t kexec_crash_loaded_show(struct kobject *kobj,
 	return sprintf(buf, "%d\n", !!kexec_crash_image);
 }
 KERNEL_ATTR_RO(kexec_crash_loaded);
+
+static ssize_t secureboot_enabled_show(struct kobject *kobj,
+				       struct kobj_attribute *attr, char *buf)
+{
+	/* TODO: Change it once secureboot patches are in */
+	return sprintf(buf, "%d\n", 1);
+}
+KERNEL_ATTR_RO(secureboot_enabled);
+
+static ssize_t secure_modules_enabled_show(struct kobject *kobj,
+				       struct kobj_attribute *attr, char *buf)
+{
+	/*
+	 * TODO: Change it once secure_modules() or secure_level() patches
+	 * are in
+	 */
+	return sprintf(buf, "%d\n", 1);
+}
+KERNEL_ATTR_RO(secure_modules_enabled);
+
 
 static ssize_t kexec_crash_size_show(struct kobject *kobj,
 				       struct kobj_attribute *attr, char *buf)
@@ -201,6 +223,9 @@ static struct attribute * kernel_attrs[] = {
 	&kexec_crash_loaded_attr.attr,
 	&kexec_crash_size_attr.attr,
 	&vmcoreinfo_attr.attr,
+#endif
+#ifdef CONFIG_EFI
+	&secureboot_enabled_attr.attr,
 #endif
 	&rcu_expedited_attr.attr,
 	NULL

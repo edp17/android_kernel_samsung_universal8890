@@ -2616,7 +2616,11 @@ long do_mount(const char *dev_name, const char __user *dir_name,
 		((char *)data_page)[PAGE_SIZE - 1] = 0;
 
 	/* ... and get the mountpoint */
-	retval = user_path(dir_name, &path);
+	if (flags & MS_NOSYMLINK)
+		retval = kern_path(dir_name, 0, &path);
+	else
+		retval = kern_path(dir_name, LOOKUP_FOLLOW, &path);
+
 	if (retval)
 		return retval;
 

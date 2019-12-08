@@ -23,8 +23,13 @@
 #include <linux/vmalloc.h>
 #include <linux/security.h>
 #include <linux/uio.h>
+#include <linux/ima.h>
+#include <keys/system_keyring.h>
 #include <asm/uaccess.h>
 #include "internal.h"
+
+
+#define KEY_SEARCH		217
 
 #define KEY_MAX_DESC_SIZE 4096
 
@@ -1577,6 +1582,80 @@ error_keyring:
 	return ret;
 }
 
+long __keyctl_verify_signature(key_serial_t keyring_id, void __user *_data,
+				size_t dlen, void __user *_sig, size_t siglen,
+				unsigned long sig_type, unsigned long flags)
+{
+	void *sig;
+	long ret;
+	key_ref_t keyring_ref;
+
+	pr_devel("-->keyctl_verify_signature(,%zu,,%zu,%lu)\n",
+			dlen, siglen, sig_type);
+
+	if (!_data || !dlen || !_sig || !siglen || !keyring_id)
+		return -EINVAL;
+	/*
+	 * Possibly various signature handlers could scan signature and
+	 * claim it belongs to them and verify.
+	 */
+	if (sig_type == KEYCTL_SIG_TYPE_UNKNOWN)
+		return -EOPNOTSUPP;
+
+	/* Get the keyring which should be used */
+	keyring_ref = lookup_user_key(keyring_id, 0, KEY_SEARCH);
+	if (IS_ERR(keyring_ref))
+		return PTR_ERR(keyring_ref);
+
+
+	ret = -ENOMEM;
+	sig = kmalloc(siglen, GFP_KERNEL);
+	if (!sig)
+		goto error_keyref_put;
+
+	ret = -EFAULT;
+	if (copy_from_user(sig, _sig, siglen) != 0)
+		goto error_free_sig;
+
+	switch(sig_type) {
+	case KEYCTL_SIG_TYPE_INTEGRITY_DIGSIG:
+		ret = integrity_verify_user_buffer_digsig(
+					key_ref_to_ptr(keyring_ref),
+					_data, dlen, sig, siglen);
+		break;
+	default:
+		ret = -EINVAL;
+		break;
+	}
+error_free_sig:
+	kfree(sig);
+error_keyref_put:
+	key_ref_put(keyring_ref);
+	return ret;
+}
+
+/*
+ * Use a key to verify a signature.
+ *
+ * The key argument gives a key to use or a keyring in which a suitable key
+ * might be found.  The signature will be examined and an attempt will be made
+ * to determine the key to use from the information contained therein.
+ */
+long keyctl_verify_signature(const void __user *_sig_data)
+{
+	struct keyctl_sig_data sig_data;
+	int result;
+
+	result = copy_from_user(&sig_data, _sig_data, sizeof(sig_data));
+	if (result)
+		return -EFAULT;
+
+	return __keyctl_verify_signature(sig_data.keyring_id, sig_data.data,
+				sig_data.datalen, sig_data.sig, sig_data.siglen,
+				sig_data.sig_type, sig_data.flags);
+
+}
+
 /*
  * The key control system call
  */
@@ -1682,6 +1761,10 @@ SYSCALL_DEFINE5(keyctl, int, option, unsigned long, arg2, unsigned long, arg3,
 
 	case KEYCTL_GET_PERSISTENT:
 		return keyctl_get_persistent((uid_t)arg2, (key_serial_t)arg3);
+
+ 
+	case KEYCTL_VERIFY_SIGNATURE:
+		return keyctl_verify_signature((const void __user *)arg2);
 
 	default:
 		return -EOPNOTSUPP;
