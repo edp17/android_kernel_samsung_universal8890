@@ -20,7 +20,6 @@
 #include <linux/seq_file.h>
 
 static enum power_supply_property max77854_fuelgauge_props[] = {
-	POWER_SUPPLY_PROP_STATUS,
 	POWER_SUPPLY_PROP_VOLTAGE_NOW,
 	POWER_SUPPLY_PROP_VOLTAGE_AVG,
 	POWER_SUPPLY_PROP_CURRENT_NOW,
@@ -1206,6 +1205,11 @@ static void max77854_fg_get_scaled_capacity(
 	psy_do_property("max77854-charger", get, POWER_SUPPLY_PROP_CHARGE_NOW,
 			chg_val2);
 
+
+	if(chg_val2.intval == 0) {
+		return;
+	}
+
 	if (fuelgauge->cable_type == POWER_SUPPLY_TYPE_HV_MAINS ||
 		fuelgauge->cable_type == POWER_SUPPLY_TYPE_HV_ERR ||
 		fuelgauge->cable_type == POWER_SUPPLY_TYPE_HV_WIRELESS ||
@@ -1686,7 +1690,9 @@ static int max77854_fg_get_property(struct power_supply *psy,
 		val->intval = data[1] << 8 | data[0];
 		pr_debug("%s: FilterCFG=0x%04X\n", __func__, data[1] << 8 | data[0]);
 		break;
-
+	case POWER_SUPPLY_PROP_CHARGE_FULL: {
+		return 0;
+	}
 	default:
 		return -EINVAL;
 	}
