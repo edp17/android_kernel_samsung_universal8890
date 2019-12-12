@@ -252,12 +252,12 @@ static void sx9310_initialize_register(struct sx9310_p *data)
 
 	for (idx = 0; idx < (sizeof(setup_reg) >> 1); idx++) {
 		sx9310_i2c_write(data, setup_reg[idx].reg, setup_reg[idx].val);
-		pr_info("[SX9310]: %s - Write Reg: 0x%x Value: 0x%x\n",
-			__func__, setup_reg[idx].reg, setup_reg[idx].val);
+		//pr_info("[SX9310]: %s - Write Reg: 0x%x Value: 0x%x\n",
+		//	__func__, setup_reg[idx].reg, setup_reg[idx].val);
 
 		sx9310_i2c_read(data, setup_reg[idx].reg, &val);
-		pr_info("[SX9310]: %s - Read Reg: 0x%x Value: 0x%x\n\n",
-			__func__, setup_reg[idx].reg, val);
+		//pr_info("[SX9310]: %s - Read Reg: 0x%x Value: 0x%x\n\n",
+		//	__func__, setup_reg[idx].reg, val);
 	}
 	data->init_done = ON;
 }
@@ -300,7 +300,7 @@ static void send_event(struct sx9310_p *data, u8 state)
 #else
 		sx9310_i2c_write(data, SX9310_CPS_CTRL8_REG, data->normal_th);
 #endif
-		pr_info("[SX9310]: %s - button touched\n", __func__);
+		//pr_info("[SX9310]: %s - button touched\n", __func__);
 	} else {
 		data->state = IDLE;
 #if (MAIN_SENSOR == 1)
@@ -311,7 +311,7 @@ static void send_event(struct sx9310_p *data, u8 state)
 #else
 		sx9310_i2c_write(data, SX9310_CPS_CTRL8_REG, data->normal_th);
 #endif
-		pr_info("[SX9310]: %s - button released\n", __func__);
+		//pr_info("[SX9310]: %s - button released\n", __func__);
 	}
 
 	if (data->skip_data == true)
@@ -332,16 +332,16 @@ static void sx9310_display_data_reg(struct sx9310_p *data)
 	sx9310_i2c_write(data, SX9310_REGSENSORSELECT, MAIN_SENSOR);
 	for (reg = SX9310_REGUSEMSB; reg <= SX9310_REGOFFSETLSB; reg++) {
 		sx9310_i2c_read(data, reg, &val);
-		pr_info("[SX9310]: %s - Register(0x%2x) data(0x%2x)\n",
-			__func__, reg, val);
+		//pr_info("[SX9310]: %s - Register(0x%2x) data(0x%2x)\n",
+		//	__func__, reg, val);
 	}
 
 #ifdef CONFIG_SENSORS_SX9310_USE_2ND_CH
 	sx9310_i2c_write(data, SX9310_REGSENSORSELECT, CH2_SENSOR);
 	for (reg = SX9310_REGUSEMSB; reg <= SX9310_REGOFFSETLSB; reg++) {
 		sx9310_i2c_read(data, reg, &val);
-		pr_info("[SX9310]: %s 2ch - Register(0x%2x) data(0x%2x)\n",
-			__func__, reg, val);
+		//pr_info("[SX9310]: %s 2ch - Register(0x%2x) data(0x%2x)\n",
+		//	__func__, reg, val);
 	}
 #endif
 }
@@ -399,13 +399,13 @@ static void sx9310_get_data(struct sx9310_p *data)
 #endif
 	mutex_unlock(&data->read_mutex);
 
-	pr_info("[SX9310]: %s - Capmain: %d, Useful: %d, avg: %d, diff: %d, Offset: %u\n",
-		__func__, data->capmain, data->useful, data->avg,
-		data->diff, data->offset);
+	//pr_info("[SX9310]: %s - Capmain: %d, Useful: %d, avg: %d, diff: %d, Offset: %u\n",
+	//	__func__, data->capmain, data->useful, data->avg,
+	//	data->diff, data->offset);
 #ifdef CONFIG_SENSORS_SX9310_USE_2ND_CH
-	pr_info("[SX9310]: %s - Capmain[2ch]: %d, Useful: %d, avg: %d, diff: %d, Offset: %u\n",
-		__func__, data->capmain_ch2, data->useful_ch2, data->avg_ch2,
-		data->diff_ch2, data->offset_ch2);
+	//pr_info("[SX9310]: %s - Capmain[2ch]: %d, Useful: %d, avg: %d, diff: %d, Offset: %u\n",
+	//	__func__, data->capmain_ch2, data->useful_ch2, data->avg_ch2,
+	//	data->diff_ch2, data->offset_ch2);
 #endif
 }
 
@@ -425,7 +425,7 @@ static int sx9310_set_mode(struct sx9310_p *data, unsigned char mode)
 		msleep(400);
 	}
 
-	pr_info("[SX9310]: %s - change the mode : %u\n", __func__, mode);
+	//pr_info("[SX9310]: %s - change the mode : %u\n", __func__, mode);
 	return ret;
 }
 
@@ -447,19 +447,19 @@ static void sx9310_ch_interrupt_read(struct sx9310_p *data, u8 status)
 	else
 		data->ch2_state = IDLE_STATE;
 #endif
-	pr_info("[SX9310]: %s - ch1:%d, ch2:%d\n",
-		__func__, data->ch1_state, data->ch2_state);
+	//pr_info("[SX9310]: %s - ch1:%d, ch2:%d\n",
+	//	__func__, data->ch1_state, data->ch2_state);
 }
 
 static void sx9310_set_enable(struct sx9310_p *data, int enable)
 {
 	u8 status = 0;
 
-	pr_info("[SX9310]: %s\n", __func__);
+	//pr_info("[SX9310]: %s\n", __func__);
 
 	if (enable == ON) {
 		sx9310_i2c_read(data, SX9310_STAT0_REG, &status);
-		pr_info("[SX9310]: %s - enable(status : 0x%x)\n", __func__, status);
+		//pr_info("[SX9310]: %s - enable(status : 0x%x)\n", __func__, status);
 
 		sx9310_ch_interrupt_read(data, status);
 		
@@ -491,7 +491,7 @@ static void sx9310_set_enable(struct sx9310_p *data, int enable)
 		enable_irq(data->irq);
 		enable_irq_wake(data->irq);
 	} else {
-		pr_info("[SX9310]: %s - disable\n", __func__);
+		//pr_info("[SX9310]: %s - disable\n", __func__);
 
 		/* disable interrupt */
  		sx9310_i2c_write(data, SX9310_IRQ_ENABLE_REG, 0x00);
@@ -554,8 +554,8 @@ static ssize_t sx9310_register_write_store(struct device *dev,
 	}
 
 	sx9310_i2c_write(data, (unsigned char)regist, (unsigned char)val);
-	pr_info("[SX9310]: %s - Register(0x%2x) data(0x%2x)\n",
-		__func__, regist, val);
+	//pr_info("[SX9310]: %s - Register(0x%2x) data(0x%2x)\n",
+	//	__func__, regist, val);
 
 	return count;
 }
@@ -568,14 +568,14 @@ static ssize_t sx9310_register_read_show(struct device *dev,
 
 	for (i = 0; i < 19; i++) {
 		sx9310_i2c_read(data, i + 0x10, &val[i]);
-		pr_info("[SX9310]: %s - Register(0x%2x) data(0x%2x)\n",
-		__func__, i + 0x10, val[i]);
+		//pr_info("[SX9310]: %s - Register(0x%2x) data(0x%2x)\n",
+		//__func__, i + 0x10, val[i]);
 	}
 
 	for (i = 26; i < 29; i++) {
 		sx9310_i2c_read(data, i + 0x10, &val[i]);
-		pr_info("[SX9310]: %s - Register(0x%2x) data(0x%2x)\n",
-		__func__, i + 0x10, val[i]);
+		//pr_info("[SX9310]: %s - Register(0x%2x) data(0x%2x)\n",
+		//__func__, i + 0x10, val[i]);
 	}
 
 	return snprintf(buf, PAGE_SIZE,
@@ -622,7 +622,7 @@ static ssize_t sx9310_freq_store(struct device *dev,
 	val = ((val << 3) | (setup_reg[6].val & 0x07)) & 0xff;
 	sx9310_i2c_write(data, SX9310_CPS_CTRL4_REG, (u8)val);
 
-	pr_info("[SX9310]: %s - Freq : 0x%x\n", __func__, data->freq);
+	//pr_info("[SX9310]: %s - Freq : 0x%x\n", __func__, data->freq);
 
 	return count;
 }
@@ -632,7 +632,7 @@ static ssize_t sx9310_freq_show(struct device *dev,
 {
 	struct sx9310_p *data = dev_get_drvdata(dev);
 
-	pr_info("[SX9310]: %s - Freq : 0x%x\n", __func__, data->freq);
+	//pr_info("[SX9310]: %s - Freq : 0x%x\n", __func__, data->freq);
 
 	return snprintf(buf, PAGE_SIZE, "%u\n", data->freq);
 }
@@ -739,7 +739,7 @@ static ssize_t sx9310_normal_threshold_store(struct device *dev,
 	data->normal_th &= 0x07;
 	data->normal_th |= val;
 
-	pr_info("[SX9310]: %s - normal threshold %lu\n", __func__, val);
+	//pr_info("[SX9310]: %s - normal threshold %lu\n", __func__, val);
 	data->normal_th_buf = data->normal_th = (u8)(val);
 
 	return count;
@@ -777,7 +777,7 @@ static ssize_t sx9310_onoff_store(struct device *dev,
 		data->skip_data = false;
 	}
 
-	pr_info("[SX9310]: %s -%u\n", __func__, val);
+	//pr_info("[SX9310]: %s -%u\n", __func__, val);
 	return count;
 }
 
@@ -900,7 +900,7 @@ static ssize_t sx9310_ch2_normal_threshold_store(struct device *dev,
 		return -EINVAL;
 	}
 
-	pr_info("[SX9310]: %s - normal threshold %lu\n", __func__, val);
+	//pr_info("[SX9310]: %s - normal threshold %lu\n", __func__, val);
 	data->normal_th_buf_ch2 = data->normal_th_ch2 = (u8)(val);
 
 	return count;
@@ -1027,7 +1027,7 @@ static ssize_t sx9310_body_threshold_store(struct device *dev,
 	data->normal_th &= 0xf8;
 	data->normal_th |= val;
 
-	pr_info("[SX9310]: %s - body threshold %lu\n", __func__, val);
+	//pr_info("[SX9310]: %s - body threshold %lu\n", __func__, val);
 	data->normal_th_buf = data->normal_th = (u8)(val);
 
 	return count;
@@ -1046,7 +1046,7 @@ static ssize_t sx9310_grip_flush_store(struct device *dev,
 		return ret;
 	}
 
-	pr_info("[SX9310]: %s - handle = %d\n", __func__, handle);
+	//pr_info("[SX9310]: %s - handle = %d\n", __func__, handle);
 
 	input_report_rel(data->input, REL_MAX, handle);
 	input_sync(data->input);
@@ -1137,8 +1137,8 @@ static ssize_t sx9310_enable_store(struct device *dev,
 		return ret;
 	}
 
-	pr_info("[SX9310]: %s - new_value = %u old_value = %d\n",
-		__func__, enable, pre_enable);
+	//pr_info("[SX9310]: %s - new_value = %u old_value = %d\n",
+	//	__func__, enable, pre_enable);
 
 	if (pre_enable == enable)
 		return size;
@@ -1198,7 +1198,7 @@ static void sx9310_touch_process(struct sx9310_p *data, u8 flag)
 	u8 status = 0;
 
 	sx9310_i2c_read(data, SX9310_STAT0_REG, &status);
-	pr_info("[SX9310]: %s - (status: 0x%x)\n", __func__, status);
+	//pr_info("[SX9310]: %s - (status: 0x%x)\n", __func__, status);
 	sx9310_get_data(data);
 	sx9310_ch_interrupt_read(data, status);
 
@@ -1209,36 +1209,30 @@ static void sx9310_touch_process(struct sx9310_p *data, u8 flag)
 				if (status & (BODY_STATUS_REG << (MAIN_SENSOR+1)))
 					send_event(data, ACTIVE);
 				else
-					pr_info("[SX9310]: %s - main D, ch2 D, but body no\n",
-					__func__);
+					//pr_info("[SX9310]: %s - main D, ch2 D, but body no\n",
+					//__func__);
 			} else {
 				send_event(data, ACTIVE);
 			}
 		} else {
 			if (status & (CSX_STATUS_REG << CH2_SENSOR))
-				pr_info("[SX9310]: %s - only CH2 D, no SAR\n",
-					__func__);
+				//pr_info("[SX9310]: %s - only CH2 D, no SAR\n",
+				//	__func__);
 		}
 	} else {
 		if (!(status & (CSX_STATUS_REG << MAIN_SENSOR)))
 			send_event(data, IDLE);
 		else
-			pr_info("[SX9310]: %s - still touched\n",
-				__func__);
+			//pr_info("[SX9310]: %s - still touched\n",
+			//	__func__);
 	}
 #else
 	if (data->state == IDLE) {
 		if (status & (CSX_STATUS_REG << MAIN_SENSOR))
 			send_event(data, ACTIVE);
-		else
-			pr_info("[SX9310]: %s - already released\n",
-				__func__);
 	} else {
 		if (!(status & (CSX_STATUS_REG << MAIN_SENSOR)))
 			send_event(data, IDLE);
-		else
-			pr_info("[SX9310]: %s - still touched\n",
-				__func__);
 	}
 #endif
 }
@@ -1310,8 +1304,8 @@ static void sx9310_debug_work_func(struct work_struct *work)
 	if (strcmp(data->hall_ic1, "CLOSE") == 0 &&
 		strcmp(data->hall_ic2, "CLOSE") == 0) {
 		if (hall_flag) {
-			pr_info("[SX9310]: %s - hall IC1&2 is closed\n",
-				__func__);
+			//pr_info("[SX9310]: %s - hall IC1&2 is closed\n",
+			//	__func__);
 			sx9310_set_offset_calibration(data);
 			hall_flag = 0;
 		}
@@ -1412,14 +1406,14 @@ static void sx9310_initialize_variable(struct sx9310_p *data)
 	data->ch1_state = IDLE;
 	data->init_done = OFF;
 
-	pr_info("%s normal_th[%u]\n", __func__, data->normal_th);
+	//pr_info("%s normal_th[%u]\n", __func__, data->normal_th);
 
 #ifdef CONFIG_SENSORS_SX9310_USE_2ND_CH
 	data->normal_th_ch2 = (u8)CONFIG_SENSORS_SX9310_NORMAL_TOUCH_THRESHOLD_CH2;
 	data->normal_th_buf_ch2 = data->normal_th_ch2;
 	data->ch2_state = IDLE;
 
-	pr_info("%s normal_th_ch2[%u]\n", __func__, data->normal_th_ch2);
+	//pr_info("%s normal_th_ch2[%u]\n", __func__, data->normal_th_ch2);
 #endif
 }
 
@@ -1456,22 +1450,16 @@ static int sx9310_cpuidle_muic_notifier(struct notifier_block *nb,
 	case ATTACHED_DEV_TA_MUIC:
 	case ATTACHED_DEV_AFC_CHARGER_PREPARE_MUIC:
 	case ATTACHED_DEV_AFC_CHARGER_9V_MUIC:
-		if (action == MUIC_NOTIFY_CMD_ATTACH) 
-			pr_info("[SX9310]:%s - TA/USB is inserted\n", __func__);
-		else
-			pr_info("[SX9310]:%s - TA/USB is removed\n", __func__);
 
 		if (grip_data->init_done == ON)
 			sx9310_set_offset_calibration(grip_data);
-		else
-			pr_info("[SX9310]:%s - not initialized\n", __func__);
 		break;
 	default:
 		break;
 	}
 
-	pr_info("[SX9310]:%s dev=%d, action=%lu\n",
-		__func__, attached_dev, action);
+	//pr_info("[SX9310]:%s dev=%d, action=%lu\n",
+	//	__func__, attached_dev, action);
 
 	return NOTIFY_DONE;
 }
@@ -1561,7 +1549,7 @@ static int sx9310_probe(struct i2c_client *client,
 	muic_notifier_register(&data->cpuidle_muic_nb,
 		sx9310_cpuidle_muic_notifier, MUIC_NOTIFY_DEV_CPUIDLE);
 #endif
-	pr_info("[SX9310]: %s - Probe done!\n", __func__);
+	//pr_info("[SX9310]: %s - Probe done!\n", __func__);
 
 	return 0;
 
@@ -1617,7 +1605,7 @@ static int sx9310_suspend(struct device *dev)
 	struct sx9310_p *data = dev_get_drvdata(dev);
 	int cnt = 0;
 
-	pr_info("[SX9310]: %s\n", __func__);
+	//pr_info("[SX9310]: %s\n", __func__);
 	/* before go to sleep, make the interrupt pin as high*/
 	while ((sx9310_get_nirq_state(data) == 0) && (cnt++ < 3)) {
 		sx9310_read_irqstate(data);
@@ -1635,7 +1623,7 @@ static int sx9310_resume(struct device *dev)
 {
 	struct sx9310_p *data = dev_get_drvdata(dev);
 
-	pr_info("[SX9310]: %s\n", __func__);
+	//pr_info("[SX9310]: %s\n", __func__);
 	sx9310_set_debug_work(data, ON, 1000);
 
 	return 0;
@@ -1645,7 +1633,7 @@ static void sx9310_shutdown(struct i2c_client *client)
 {
 	struct sx9310_p *data = i2c_get_clientdata(client);
 
-	pr_info("[SX9310]: %s\n", __func__);
+	//pr_info("[SX9310]: %s\n", __func__);
 	sx9310_set_debug_work(data, OFF, 1000);
 	if (atomic_read(&data->enable) == ON)
 		sx9310_set_enable(data, OFF);

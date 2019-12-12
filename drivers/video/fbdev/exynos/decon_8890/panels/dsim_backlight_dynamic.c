@@ -199,16 +199,16 @@ static char dsim_panel_get_elvssoffset(struct dsim_device *dsim)
 
 	if(UNDER_MINUS_15(panel->temperature)) {
 		retVal = dimming_info[panel->br_index].elvss_offset[UNDER_MINUS_FIFTEEN];
-		pr_info("%s under -20 %d %d\n",
-			__func__, retVal, dimming_info[panel->br_index].elvss_offset[UNDER_MINUS_FIFTEEN]);
+		//pr_info("%s under -20 %d %d\n",
+		//	__func__, retVal, dimming_info[panel->br_index].elvss_offset[UNDER_MINUS_FIFTEEN]);
 	} else if(UNDER_0(panel->temperature)) {
 		retVal = dimming_info[panel->br_index].elvss_offset[UNDER_ZERO];
-		pr_info("%s under 0 %d %d\n",
-			__func__, retVal, dimming_info[panel->br_index].elvss_offset[UNDER_ZERO]);
+		//pr_info("%s under 0 %d %d\n",
+		//	__func__, retVal, dimming_info[panel->br_index].elvss_offset[UNDER_ZERO]);
 	} else {
 		retVal = dimming_info[panel->br_index].elvss_offset[OVER_ZERO];
-		pr_info("%s over 0 %d %d\n",
-			__func__, retVal, dimming_info[panel->br_index].elvss_offset[OVER_ZERO]);
+		//pr_info("%s over 0 %d %d\n",
+		//	__func__, retVal, dimming_info[panel->br_index].elvss_offset[OVER_ZERO]);
 	}
 
 	return retVal;
@@ -317,7 +317,7 @@ static void dsim_panel_irc_ctrl(struct dsim_device *dsim)
 	if (dsim_write_hl_data(dsim, panel->irc_table[p_br], irc_cmd_cnt) < 0)
 		dsim_err("%s : failed to write gamma \n", __func__);
 
-	pr_info("%s : p_br : %d\n", __func__, p_br);
+	//pr_info("%s : p_br : %d\n", __func__, p_br);
 }
 
 
@@ -372,7 +372,7 @@ static int low_level_set_brightness(struct dsim_device *dsim ,int force)
 		return 0;
 	}
 
-	pr_info( "%s++\n", __func__ );
+	//pr_info( "%s++\n", __func__ );
 	if (dsim_write_hl_data(dsim, SEQ_TEST_KEY_ON_F0, ARRAY_SIZE(SEQ_TEST_KEY_ON_F0)) < 0)
 		dsim_err("%s : fail to write F0 on command.\n", __func__);
 
@@ -403,7 +403,7 @@ static int low_level_set_brightness(struct dsim_device *dsim ,int force)
 	if (dsim_write_hl_data(dsim, SEQ_TEST_KEY_OFF_F0, ARRAY_SIZE(SEQ_TEST_KEY_OFF_F0)) < 0)
 		dsim_err("%s : fail to write F0 on command\n", __func__);
 
-	pr_info( "%s--\n", __func__ );
+	//pr_info( "%s--\n", __func__ );
 	return 0;
 }
 #endif

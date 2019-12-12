@@ -21,7 +21,6 @@
 #include "max98506.h"
 #include <linux/regulator/consumer.h>
 
-#define DEBUG_MAX98506
 #ifdef DEBUG_MAX98506
 #define msg_maxim(format, args...)	\
 pr_info("[MAX98506_DEBUG] %s: " format "\n", __func__, ## args)

@@ -234,7 +234,7 @@ int initialize_mcu(struct ssp_data *data)
 	clean_pending_list(data);
 
 	iRet = get_chipid(data);
-	pr_info("[SSP] MCU device ID = %d, reading ID = %d\n", DEVICE_ID, iRet);
+//	pr_info("[SSP] MCU device ID = %d, reading ID = %d\n", DEVICE_ID, iRet);
 	if (iRet != DEVICE_ID) {
 		if (iRet < 0) {
 			pr_err("[SSP]: %s - MCU is not working : 0x%x\n",
@@ -421,12 +421,12 @@ static int ssp_parse_dt(struct device *dev, struct ssp_data *data)
 	/* acc type */
 	if (of_property_read_u32(np, "ssp-acc-type", &data->acc_type))
 		data->acc_type = 0;
-	pr_info("[SSP] acc-type = %d\n", data->acc_type);
+	//pr_info("[SSP] acc-type = %d\n", data->acc_type);
 
 	/* mag type */
 	if (of_property_read_u32(np, "ssp-mag-type", &data->mag_type))
 		data->mag_type = 0;
-	pr_info("[SSP] mag-type = %d\n", data->mag_type);
+	//pr_info("[SSP] mag-type = %d\n", data->mag_type);
 
 	if (of_property_read_u32(np, "ssp-ap-rev", &data->ap_rev))
 		data->ap_rev = 0;
@@ -441,8 +441,8 @@ static int ssp_parse_dt(struct device *dev, struct ssp_data *data)
 			&data->uProxLoThresh))
 		data->uProxLoThresh = DEFUALT_LOW_THRESHOLD;
 
-	pr_info("[SSP] hi-thresh[%u] low-thresh[%u]\n",
-		data->uProxHiThresh, data->uProxLoThresh);
+	//pr_info("[SSP] hi-thresh[%u] low-thresh[%u]\n",
+	//	data->uProxHiThresh, data->uProxLoThresh);
 
 	if (of_property_read_u32(np, "ssp,prox-detect_hi_thresh",
 			&data->uProxHiThresh_detect))
@@ -452,8 +452,8 @@ static int ssp_parse_dt(struct device *dev, struct ssp_data *data)
 			&data->uProxLoThresh_detect))
 		data->uProxLoThresh_detect = DEFUALT_DETECT_LOW_THRESHOLD;
 
-	pr_info("[SSP] detect-hi[%u] detect-low[%u]\n",
-		data->uProxHiThresh_detect, data->uProxLoThresh_detect);
+	//pr_info("[SSP] detect-hi[%u] detect-low[%u]\n",
+	//	data->uProxHiThresh_detect, data->uProxLoThresh_detect);
 #endif
 #else /* CONFIG_SENSORS_SSP_PROX_FACTORYCAL */
 	if (of_property_read_u32(np, "ssp,prox-hi_thresh",
@@ -470,9 +470,9 @@ static int ssp_parse_dt(struct device *dev, struct ssp_data *data)
 	//for tmd4904
 	data->uProxLoThresh_default_tmd4904 = DEFUALT_LOW_THRESHOLD_TMD4904;
 
-	pr_info("[SSP] hi-thresh[%u] low-thresh[%u], TMD4904 hi-thresh[%u] low-thresh[%u]\n",
+	/*pr_info("[SSP] hi-thresh[%u] low-thresh[%u], TMD4904 hi-thresh[%u] low-thresh[%u]\n",
 		data->uProxHiThresh_default, data->uProxLoThresh_default,
-		data->uProxHiThresh_default_tmd4904, data->uProxLoThresh_default_tmd4904);
+		data->uProxHiThresh_default_tmd4904, data->uProxLoThresh_default_tmd4904);*/
 
 	if (of_property_read_u32(np, "ssp,prox-cal_hi_thresh",
 			&data->uProxHiThresh_cal))
@@ -488,9 +488,9 @@ static int ssp_parse_dt(struct device *dev, struct ssp_data *data)
 	//for tmd4904
 	data->uProxLoThresh_cal_tmd4904 = DEFUALT_CAL_LOW_THRESHOLD_TMD4904;
 
-	pr_info("[SSP] cal-hi[%u] cal-low[%u], TMD4904 cal-hi[%u] cal-low[%u] \n",
+	/*pr_info("[SSP] cal-hi[%u] cal-low[%u], TMD4904 cal-hi[%u] cal-low[%u] \n",
 		data->uProxHiThresh_cal, data->uProxLoThresh_cal,
-		data->uProxHiThresh_cal_tmd4904, data->uProxLoThresh_cal_tmd4904);
+		data->uProxHiThresh_cal_tmd4904, data->uProxLoThresh_cal_tmd4904);*/
 #endif
 
 	data->uProxAlertHiThresh = DEFUALT_PROX_ALERT_HIGH_THRESHOLD;
@@ -510,8 +510,8 @@ static int ssp_parse_dt(struct device *dev, struct ssp_data *data)
 	else
 	{
 		if (!of_get_property(np, "ssp-mag-array", &len)) {
-			pr_info("[SSP] No static matrix at DT for YAS532!(%p)\n",
-					data->static_matrix);
+			//pr_info("[SSP] No static matrix at DT for YAS532!(%p)\n",
+			//		data->static_matrix);
 			goto dt_exit;
 		}
 		if (len/4 != 9) {
@@ -519,7 +519,7 @@ static int ssp_parse_dt(struct device *dev, struct ssp_data *data)
 			goto dt_exit;
 		}
 		data->static_matrix = kzalloc(9*sizeof(s16), GFP_KERNEL);
-		pr_info("[SSP] static matrix Length:%d, Len/4=%d\n", len, len/4);
+		//pr_info("[SSP] static matrix Length:%d, Len/4=%d\n", len, len/4);
 
 		for (i = 0; i < 9; i++) {
 			if (of_property_read_u32_index(np, "ssp-mag-array", i, &temp)) {
@@ -536,10 +536,10 @@ static int ssp_parse_dt(struct device *dev, struct ssp_data *data)
 		data->hall_threshold, ARRAY_SIZE(data->hall_threshold))) {
 		pr_err("[SSP]: %s - no hall-threshold, set as 0\n", __func__);
 	} else {
-		pr_info("[SSP]: %s - hall thr: %d %d %d %d %d\n", __func__,
+		/*pr_info("[SSP]: %s - hall thr: %d %d %d %d %d\n", __func__,
 		data->hall_threshold[0], data->hall_threshold[1],
 		data->hall_threshold[2], data->hall_threshold[3],
-		data->hall_threshold[4]);
+		data->hall_threshold[4]);*/
 	}
 	
 	return errorno;
@@ -576,8 +576,8 @@ static int exynos_cpuidle_muic_notifier(struct notifier_block *nb,
 		break;
 	}
 
-	pr_info("[SSP] %s: dev=%d, action=%lu\n",
-			__func__, attached_dev, action);
+	//pr_info("[SSP] %s: dev=%d, action=%lu\n",
+	//		__func__, attached_dev, action);
 
 	return NOTIFY_DONE;
 }
@@ -589,8 +589,6 @@ void set_ssp_data_info(struct ssp_data *data)
 {
 	if (data != NULL)
 		ssp_data_info = data;
-	else
-		pr_info("[SSP] %s : ssp data info is null\n", __func__);
 }
 
 int ssp_motor_callback(int state)
@@ -602,14 +600,14 @@ int ssp_motor_callback(int state)
 	queue_work(ssp_data_info->ssp_motor_wq,
 			&ssp_data_info->work_ssp_motor);
 
-	pr_info("[SSP] %s : Motor state %d\n",__func__, state);
+	//pr_info("[SSP] %s : Motor state %d\n",__func__, state);
 
 	return iRet;
 }
 
 int (*getMotorCallback(void))(int)
 {
-	pr_info("[SSP] %s : called \n",__func__);
+	//pr_info("[SSP] %s : called \n",__func__);
 	return ssp_motor_callback;
 }
 
@@ -620,7 +618,7 @@ void ssp_motor_work_func(struct work_struct *work)
 					struct ssp_data, work_ssp_motor);
 
 	iRet = send_motor_state(data);
-	pr_info("[SSP] %s : Motor state %d, iRet %d\n",__func__, data->motor_state, iRet);
+	//pr_info("[SSP] %s : Motor state %d, iRet %d\n",__func__, data->motor_state, iRet);
 }
 #endif
 
@@ -630,7 +628,7 @@ static int ssp_probe(struct spi_device *spi)
 	struct ssp_platform_data *pdata;
 	int iRet = 0;
 
-	pr_info("[SSP] %s, is called\n", __func__);
+	//pr_info("[SSP] %s, is called\n", __func__);
 
 	data = kzalloc(sizeof(*data), GFP_KERNEL);
 
@@ -703,7 +701,7 @@ static int ssp_probe(struct spi_device *spi)
 		goto err_reset_null;
 	}
 
-	pr_info("\n#####################################################\n");
+	//pr_info("\n#####################################################\n");
 
 	initialize_variable(data);
 	wake_lock_init(&data->ssp_wake_lock,
@@ -770,10 +768,10 @@ static int ssp_probe(struct spi_device *spi)
 		iRet); */
 
 	if (iRet < 0) {
-		pr_info("[SSP_IRQ]: request_irq(%d) failed for gpio %d (%d)\n",
+		/*pr_info("[SSP_IRQ]: request_irq(%d) failed for gpio %d (%d)\n",
 				data->mcu_host_wake_int,
 				data->mcu_host_wake_irq,
-				iRet);
+				iRet);*/
 		iRet = -ENODEV;
 		goto err_request_irq;
 	}
@@ -793,7 +791,7 @@ static int ssp_probe(struct spi_device *spi)
 		exynos_cpuidle_muic_notifier, MUIC_NOTIFY_DEV_CPUIDLE);
 #endif
 
-	pr_info("[SSP]: %s - probe success!\n", __func__);
+	//pr_info("[SSP]: %s - probe success!\n", __func__);
 
 	enable_debug_timer(data);
 	data->bProbeIsDone = true;
@@ -801,7 +799,7 @@ static int ssp_probe(struct spi_device *spi)
 	mutex_init(&shutdown_lock);
 
 #ifdef CONFIG_SSP_MOTOR
-	pr_info("[SSP]: %s motor callback set!", __func__);
+	//pr_info("[SSP]: %s motor callback set!", __func__);
 	set_ssp_data_info(data);
 	//register motor
 	setMotorCallback(ssp_motor_callback);
@@ -855,7 +853,7 @@ err_setup:
 	kfree(data);
 	pr_err("[SSP] %s, probe failed!\n", __func__);
 exit:
-	pr_info("#####################################################\n\n");
+	//pr_info("#####################################################\n\n");
 	return iRet;
 }
 
@@ -930,7 +928,7 @@ static void ssp_shutdown(struct spi_device *spi)
 	mutex_destroy(&data->pending_mutex);
 	mutex_destroy(&data->enable_mutex);
 	mutex_destroy(&data->ssp_enable_mutex);
-	pr_info("[SSP] %s done\n", __func__);
+	//pr_info("[SSP] %s done\n", __func__);
 exit:
 	kfree(data);
 }
@@ -993,7 +991,7 @@ static int ssp_suspend(struct device *dev)
 	disable_debug_timer(data);
 
 	data->bTimeSyncing = false;
-	pr_info("[SSP]: isHandlingIrq:%d\n", data->bHandlingIrq);
+	//pr_info("[SSP]: isHandlingIrq:%d\n", data->bHandlingIrq);
 
 	return 0;
 }

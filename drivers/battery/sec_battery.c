@@ -6110,7 +6110,7 @@ static int sec_bat_get_property(struct power_supply *psy,
 			val->intval = POWER_SUPPLY_TYPE_WIRELESS;
 		else
 			val->intval = battery->cable_type;
-		pr_info("%s cable type = %d sleep_mode = %d\n", __func__, val->intval, sleep_mode);
+		//pr_info("%s cable type = %d sleep_mode = %d\n", __func__, val->intval, sleep_mode);
 		break;
 	case POWER_SUPPLY_PROP_TECHNOLOGY:
 		val->intval = battery->pdata->technology;
@@ -6151,7 +6151,7 @@ static int sec_bat_get_property(struct power_supply *psy,
 	case POWER_SUPPLY_PROP_CAPACITY:
 		if (battery->pdata->fake_capacity) {
 			val->intval = 90;
-			pr_info("%s : capacity(%d)\n", __func__, val->intval);
+			//pr_info("%s : capacity(%d)\n", __func__, val->intval);
 		} else {
 #if defined(CONFIG_SAMSUNG_BATTERY_ENG_TEST)
 			if (battery->status == POWER_SUPPLY_STATUS_FULL) {

@@ -75,7 +75,7 @@ void muic_print_reg_log(void)
 		if(muic_log_cnt >= MAX_LOG) muic_log_cnt = 0;
 		sprintf(mesg+strlen(mesg),"%x(%x)%x ", reg, value, rw);
 	}
-	pr_info("%s:%s\n", __func__, mesg);
+	//pr_info("%s:%s\n", __func__, mesg);
 }
 void muic_read_reg_dump(muic_data_t *pmuic, char *mesg)
 {

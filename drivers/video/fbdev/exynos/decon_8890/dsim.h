@@ -43,15 +43,9 @@
 		pr_err(pr_fmt(fmt), ##__VA_ARGS__);		\
 	} while (0)
 
-#define dsim_info(fmt, ...)					\
-	do {							\
-		pr_info(pr_fmt(fmt), ##__VA_ARGS__);		\
-	} while (0)
+#define dsim_info(fmt, ...)
 
-#define dsim_dbg(fmt, ...)					\
-	do {							\
-		pr_debug(pr_fmt(fmt), ##__VA_ARGS__);		\
-	} while (0)
+#define dsim_dbg(fmt, ...)
 
 #define call_panel_ops(q, op, args...)				\
 	(((q)->panel_ops->op) ? ((q)->panel_ops->op(args)) : 0)
