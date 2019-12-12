@@ -21,8 +21,8 @@ bool sec_bat_cisd_check(struct sec_battery_info *battery)
 	static int prev_fullcap_rep;
 
 	if (battery->factory_mode || battery->is_jig_on) {
-		dev_dbg(battery->dev, "%s: No need to check in factory mode\n",
-			__func__);
+		//dev_dbg(battery->dev, "%s: No need to check in factory mode\n",
+		//	__func__);
 		return ret;
 	}
 
@@ -47,11 +47,11 @@ bool sec_bat_cisd_check(struct sec_battery_info *battery)
 		psy_do_property(battery->pdata->charger_name, get,
 			POWER_SUPPLY_PROP_CONSTANT_CHARGE_CURRENT, chgcur_val);
 
-		dev_info(battery->dev, "%s: [CISD] iavg: %d, incur: %d, chgcur: %d,\n"
+		/*dev_info(battery->dev, "%s: [CISD] iavg: %d, incur: %d, chgcur: %d,\n"
 			"cc_T: %ld, lcd_off_T: %ld, passed_T: %ld, full_T: %ld, chg_end_T: %ld, cisd: 0x%x\n",__func__,
 			battery->current_avg, incur_val.intval, chgcur_val.intval,
 			pcisd->cc_start_time, pcisd->lcd_off_start_time, battery->charging_passed_time,
-			battery->charging_fullcharged_time, pcisd->charging_end_time, pcisd->state);
+			battery->charging_fullcharged_time, pcisd->charging_end_time, pcisd->state);*/
 
 		if (is_cisd_check_type(battery->cable_type) && incur_val.intval > pcisd->current_max_thres &&
 			chgcur_val.intval > pcisd->charging_current_thres && battery->current_now > 0 &&
@@ -89,7 +89,7 @@ bool sec_bat_cisd_check(struct sec_battery_info *battery)
 			battery->current_now >= 0 && ((battery->status == POWER_SUPPLY_STATUS_FULL &&
 		    battery->charging_mode == SEC_BATTERY_CHARGING_NONE) || battery->is_recharging)) {
 			now_ts = ktime_to_timespec(ktime_get_boottime());
-			dev_info(battery->dev, "%s: cisd - leakage D Test(now time = %ld)\n", __func__, ((unsigned long)now_ts.tv_sec));
+			//dev_info(battery->dev, "%s: cisd - leakage D Test(now time = %ld)\n", __func__, ((unsigned long)now_ts.tv_sec));
 			if (pcisd->charging_end_time <= 0)
 				pcisd->charging_end_time = now_ts.tv_sec;
 		} else {
@@ -101,7 +101,7 @@ bool sec_bat_cisd_check(struct sec_battery_info *battery)
 		if (battery->siop_level != 100 ||
 			battery->current_now < 0 || (battery->status != POWER_SUPPLY_STATUS_FULL)) {
 			pcisd->state &= ~(CISD_STATE_LEAK_E|CISD_STATE_LEAK_F|CISD_STATE_LEAK_G);
-			dev_info(battery->dev, "%s: cisd - clear EFG\n", __func__);
+			//dev_info(battery->dev, "%s: cisd - clear EFG\n", __func__);
 			pcisd->recharge_count_2 = 0;
 			pcisd->charging_end_time_2 = 0;
 		}
@@ -122,7 +122,7 @@ bool sec_bat_cisd_check(struct sec_battery_info *battery)
 			pcisd->state |= CISD_STATE_LEAK_C;
 			pcisd->data[CISD_DATA_LEAKAGE_C]++;
 		} else if (!(pcisd->state & CISD_STATE_LEAK_D) && pcisd->recharge_count >= pcisd->recharge_count_thres) {
-			dev_info(battery->dev, "%s: cisd - leakage D Test(now time = %ld)\n", __func__, ((unsigned long)now_ts.tv_sec));
+			//dev_info(battery->dev, "%s: cisd - leakage D Test(now time = %ld)\n", __func__, ((unsigned long)now_ts.tv_sec));
 			if ((unsigned long)now_ts.tv_sec - pcisd->charging_end_time <= pcisd->recharge_delay_time) {
 				pcisd->state |= CISD_STATE_LEAK_D;
 				pcisd->data[CISD_DATA_LEAKAGE_D]++;
@@ -132,19 +132,19 @@ bool sec_bat_cisd_check(struct sec_battery_info *battery)
 		if (!(pcisd->state & (CISD_STATE_LEAK_E|CISD_STATE_LEAK_F|CISD_STATE_LEAK_G))
 			&& pcisd->charging_end_time_2 > 0 && pcisd->recharge_count_2 > 0) {
 			if ((unsigned long)now_ts.tv_sec - pcisd->charging_end_time_2 <= pcisd->leakage_e_time) {
-				dev_info(battery->dev, "%s: cisd - leakage E Test(now time = %ld)\n", __func__, ((unsigned long)now_ts.tv_sec));
+				//dev_info(battery->dev, "%s: cisd - leakage E Test(now time = %ld)\n", __func__, ((unsigned long)now_ts.tv_sec));
 				pcisd->state |= CISD_STATE_LEAK_E;
 				pcisd->data[CISD_DATA_LEAKAGE_E]++;
 				pcisd->recharge_count_2 = 0;
 				pcisd->charging_end_time_2 = 0;
 			} else if ((unsigned long)now_ts.tv_sec - pcisd->charging_end_time_2 <= pcisd->leakage_f_time) {
-				dev_info(battery->dev, "%s: cisd - leakage F Test(now time = %ld)\n", __func__, ((unsigned long)now_ts.tv_sec));
+				//dev_info(battery->dev, "%s: cisd - leakage F Test(now time = %ld)\n", __func__, ((unsigned long)now_ts.tv_sec));
 				pcisd->state |= CISD_STATE_LEAK_F;
 				pcisd->data[CISD_DATA_LEAKAGE_F]++;
 				pcisd->recharge_count_2 = 0;
 				pcisd->charging_end_time_2 = 0;
 			} else if ((unsigned long)now_ts.tv_sec - pcisd->charging_end_time_2 <= pcisd->leakage_g_time) {
-				dev_info(battery->dev, "%s: cisd - leakage G Test(now time = %ld)\n", __func__, ((unsigned long)now_ts.tv_sec));
+				//dev_info(battery->dev, "%s: cisd - leakage G Test(now time = %ld)\n", __func__, ((unsigned long)now_ts.tv_sec));
 				pcisd->state |= CISD_STATE_LEAK_G;
 				pcisd->data[CISD_DATA_LEAKAGE_G]++;
 				pcisd->recharge_count_2 = 0;
@@ -152,11 +152,11 @@ bool sec_bat_cisd_check(struct sec_battery_info *battery)
 			}
 		}
 
-		dev_info(battery->dev, "%s: [CISD] iavg: %d, incur: %d, chgcur: %d,\n"
+		/*dev_info(battery->dev, "%s: [CISD] iavg: %d, incur: %d, chgcur: %d,\n"
 			"cc_T: %ld, lcd_off_T: %ld, passed_T: %ld, full_T: %ld, chg_end_T: %ld, recnt: %d, cisd: 0x%x\n",__func__,
 			battery->current_avg, incur_val.intval, chgcur_val.intval,
 			pcisd->cc_start_time, pcisd->lcd_off_start_time, battery->charging_passed_time,
-			battery->charging_fullcharged_time, pcisd->charging_end_time, pcisd->recharge_count, pcisd->state);
+			battery->charging_fullcharged_time, pcisd->charging_end_time, pcisd->recharge_count, pcisd->state);*/
 
 		pcisd->state &= ~CISD_STATE_CAP_OVERFLOW;
 
